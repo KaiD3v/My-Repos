@@ -1,4 +1,5 @@
 import { FaBars, FaGithub, FaPlus, FaSpinner, FaTrash } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import {
   Container,
   Form,
@@ -120,9 +121,9 @@ const Main = () => {
                 </DeleteButton>
                 {repo.name}
               </span>
-              <a href="">
+              <Link to={`/repository/${encodeURIComponent(repo.name)}`}>
                 <FaBars size={20} />
-              </a>
+                </Link>
             </li>
           )}
       </List>
