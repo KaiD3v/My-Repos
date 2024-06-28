@@ -6,14 +6,14 @@ import {
   List,
   DeleteButton
 } from "../../styles";
-import {} from "react-icons";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import api from "../../api/api.config";
 
 const Main = () => {
   const [newRepo, setNewRepo] = useState("");
   const [loading, setLoading] = useState(false);
-  const [repositories, setRepositeries] = useState([]);
+  const [repositories, setRepositories] = useState([]);
+  const [alert, setAlert] = useState(false);
 
   const handleSubmit = useCallback(
     e => {
@@ -22,15 +22,26 @@ const Main = () => {
       async function submit() {
         setLoading(true);
         try {
+          if (newRepo === "") {
+            throw new Error("É necessário indicar um repositório.");
+          }
+
           const res = await api.get(`/repos/${newRepo}`);
+
+          const hasRepo = repositories.find(repo => repo.name === newRepo);
+
+          if (hasRepo) {
+            throw new Error("Repositório duplicado.");
+          }
 
           const data = {
             name: res.data.full_name
           };
 
-          setRepositeries([...repositories, data]);
+          setRepositories([...repositories, data]);
           setNewRepo("");
         } catch (error) {
+          setAlert(true);
           console.log(error);
         } finally {
           setLoading(false);
@@ -42,10 +53,32 @@ const Main = () => {
     [newRepo, repositories]
   );
 
-  const handleDelete = useCallback(repo => {
-    const find = repositories.filter(r => r.name != repo);
-    setRepositeries(find);
-  }, [repositories]);
+  const handleDelete = useCallback(
+    repo => {
+      const find = repositories.filter(r => r.name !== repo);
+      setRepositories(find);
+    },
+    [repositories]
+  );
+
+  // get
+  useEffect(() => {
+    const repoStorage = localStorage.getItem("repos");
+
+    if (repoStorage) {
+      setRepositories(JSON.parse(repoStorage));
+    }
+  }, []);
+
+  // save
+  useEffect(
+    () => {
+      if (repositories.length > 0) {
+        localStorage.setItem("repos", JSON.stringify(repositories));
+      }
+    },
+    [repositories]
+  );
 
   return (
     <Container>
@@ -53,12 +86,15 @@ const Main = () => {
         <FaGithub size={25} />
         My Repos
       </h1>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} error={alert}>
         <input
           type="text"
           placeholder="Adicionar Repositórios"
           value={newRepo}
-          onChange={e => setNewRepo(e.target.value)}
+          onChange={e => {
+            setNewRepo(e.target.value);
+            setAlert(false);
+          }}
         />
 
         <SubmitButton loading={loading ? 1 : 0}>
@@ -75,7 +111,10 @@ const Main = () => {
               <span>
                 <DeleteButton
                   value={repo.name}
-                  onClick={() => handleDelete(repo.name)}
+                  onClick={() => {
+                    handleDelete(repo.name);
+                    setAlert(false);
+                  }}
                 >
                   <FaTrash size={14} />
                 </DeleteButton>
