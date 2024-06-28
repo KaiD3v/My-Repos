@@ -6,7 +6,7 @@ import {
   SubmitButton,
   List,
   DeleteButton
-} from "../../styles";
+} from "./styles";
 import { useCallback, useEffect, useState } from "react";
 import api from "../../api/api.config";
 
